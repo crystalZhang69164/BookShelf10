@@ -22,8 +22,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 
 import edu.temple.audiobookplayer.AudiobookService;
 
@@ -40,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     AudiobookService.MediaControlBinder mediaControlBinder;
     boolean connected;
     SeekBar bookProgressSeekBar;
+
 
     private final String SEARCH_URL = "https://kamorris.com/lab/audlib/booksearch.php?search=";
 
@@ -248,6 +256,78 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             }
         }.start();
     }
+
+    //new
+    @Override
+    public void downloadButtonClicked(Book book) {
+        final int id = book.getId();
+        final String title = book.getTitle();
+        Thread t = new Thread(){
+            @Override
+            public void run(){
+                downloadHandler.sendMessage(download(id, title));
+            }
+        };
+        t.start();
+    }
+
+    private Message download(int id, String title) {
+        URL downloadURL;
+
+        String filePath = getExternalFilesDir(null).toString() +
+                getResources().getString(R.string.audioBookDir) + "/" + title + ".wav";
+        filePath = filePath.replace(" ", "");
+        File outputFile = new File(filePath);
+        outputFile.getParentFile().mkdirs();
+
+        try {
+            downloadURL = new URL(getResources().getString(R.string.bookDownload)+ id);
+            URLConnection connection = downloadURL.openConnection();
+            int connectionLength = connection.getContentLength();
+
+
+            DataInputStream inputStream = new DataInputStream(downloadURL.openStream());
+
+            byte[] buffer = new byte[connectionLength];
+            inputStream.readFully(buffer);
+            inputStream.close();
+
+
+            if (!outputFile.exists())
+                outputFile.createNewFile();
+            DataOutputStream outputStream = new DataOutputStream(new FileOutputStream(outputFile));
+            outputStream.write(buffer);
+            outputStream.flush();
+            outputStream.close();
+
+        } catch (MalformedURLException ex) {
+            ex.printStackTrace();
+            return null;
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+
+        Message msg = Message.obtain();
+        msg.what = 1;
+
+        return msg;
+    }
+
+    Handler downloadHandler = new Handler(new Handler.Callback() {
+
+        @Override
+        public boolean handleMessage(Message msg) {
+            if (msg == null) {
+                //TODO worry about this later
+            }
+            else {
+                MainActivity.this.bookDetailsFragment.downloaded = true;
+            }
+            return true;}
+    });
+
+
 
     @Override
     public void play(int bookId) {

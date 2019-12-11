@@ -49,4 +49,14 @@
         android:layout_gravity="center"
         android:src="@android:drawable/ic_media_play" />
 
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:shadowDx="20"
+        android:shadowDy="20"
+        android:shadowRadius="30"
+        android:text="Button" />
+
 </FrameLayout>

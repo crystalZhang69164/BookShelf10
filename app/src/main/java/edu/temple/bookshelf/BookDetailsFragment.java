@@ -77,5 +77,8 @@ public class BookDetailsFragment extends Fragment {
     interface MediaControlInterface {
         void play (int bookId);
     }
+    public interface downloadButton{
+        void downloadButtonClicked(Book book);
+    }
 
 }
